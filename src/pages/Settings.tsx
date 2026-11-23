@@ -101,7 +101,7 @@ export default function Settings() {
               <div className="flex items-center justify-between py-3">
                 <div>
                   <div className="text-sm font-medium text-slate-800">Low Stock Alerts</div>
-                  <div className="text-xs text-slate-500">Create a notification when a sale or stock-out brings a product to its reorder point</div>
+                  <div className="text-xs text-slate-500">Create a notification when a sale or stock-out brings a product down to its low stock alert level</div>
                 </div>
                 <Toggle checked={lowStockAlerts} onChange={() => setLowStockAlerts(v => !v)} />
               </div>

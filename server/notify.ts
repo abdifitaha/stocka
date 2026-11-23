@@ -9,7 +9,7 @@ export async function notifyLowStock(productIds: number[]) {
     `INSERT INTO notifications (type, title, body)
      SELECT 'low_stock',
        CASE WHEN p.stock = 0 THEN p.name || ' is out of stock' ELSE p.name || ' is low on stock' END,
-       p.stock || ' left (reorder level ' || p.reorder || ')'
+       p.stock || ' left (alert level ' || p.reorder || ')'
      FROM products p
      WHERE p.id = ANY($1::int[]) AND p.stock <= p.reorder
        AND NOT EXISTS (SELECT 1 FROM notifications n WHERE n.type = 'low_stock' AND NOT n.read AND n.title LIKE p.name || ' is %')`,

@@ -68,16 +68,17 @@ function ProductModal({ product, categories, saving, onClose, onSave }: {
                 placeholder="0.00" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Stock Qty</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
               <input type="number" value={form.stock ?? ""} onChange={e => setForm(f => ({ ...f, stock: Number(e.target.value) }))}
                 className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400"
                 placeholder="0" />
             </div>
             <div className="col-span-2">
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Reorder Point</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Low stock alert level</label>
               <input type="number" value={form.reorder ?? ""} onChange={e => setForm(f => ({ ...f, reorder: Number(e.target.value) }))}
                 className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400"
                 placeholder="10" />
+              <p className="text-[11px] text-slate-400 mt-1">You get a warning when stock falls to this number or lower.</p>
             </div>
           </div>
         </div>

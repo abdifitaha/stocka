@@ -178,7 +178,7 @@ export default function Dashboard() {
             <span className="ml-auto bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{inventoryAlerts.length}</span>
           </div>
           <div className="divide-y divide-slate-50">
-            {inventoryAlerts.length === 0 && <div className="px-5 py-8 text-center text-xs text-slate-400">Nothing needs reordering</div>}
+            {inventoryAlerts.length === 0 && <div className="px-5 py-8 text-center text-xs text-slate-400">No low stock items</div>}
             {inventoryAlerts.map((alert) => (
               <div key={alert.id} className="px-5 py-3.5">
                 <div className="flex items-start justify-between gap-2 mb-1">

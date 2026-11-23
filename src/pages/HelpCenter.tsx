@@ -9,7 +9,7 @@ const faqs = [
   { q: "How do I create a purchase order?", a: "Go to Purchase Orders → click 'New PO'. Select the supplier, add the products and quantities you need to order, set an expected delivery date, and submit. You can track the PO status in the Purchase Orders list." },
   { q: "How do I export reports?", a: "Navigate to Reports → select your date range and report type. Click 'Export Report' to download as PDF or Excel. Charts can also be saved individually." },
   { q: "How do I invite a team member?", a: "Go to Settings → User Management. Click 'Invite User', fill in their email and assign a role. They'll receive an invitation email with instructions to set up their account." },
-  { q: "What do the stock status indicators mean?", a: "In Stock: quantity is above the reorder point. Low Stock: quantity is at or below the reorder point. Out of Stock: quantity is 0. Set reorder points per product in the product settings." },
+  { q: "What do the stock status indicators mean?", a: "In Stock: quantity is above the low stock alert level. Low Stock: quantity is at or below the alert level. Out of Stock: quantity is 0. Set the alert level for each product when you add or edit it." },
   { q: "How does dark mode work?", a: "Go to Settings → Appearance. Under Theme, select 'Dark'. Changes apply immediately. You can also select 'System' to follow your operating system's preference." },
 ];
 
