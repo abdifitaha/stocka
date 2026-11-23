@@ -3,7 +3,7 @@ import { Search, ChevronDown, ChevronRight, MessageCircle, Book, Video, LifeBuoy
 import Breadcrumb from "../components/ui/Breadcrumb";
 
 const faqs = [
-  { q: "How do I add a new product?", a: "Navigate to Products → click 'Add Product' in the top right. Fill in the product name, SKU, category, price, and initial stock. Click 'Add Product' to save. The product will appear in your catalog immediately." },
+  { q: "How do I add a new product?", a: "Navigate to Products → click 'Add Product' in the top right. Fill in the product name, category, price, and initial stock. Click 'Add Product' to save. The product will appear in your catalog immediately." },
   { q: "How do I record a stock receipt (Stock In)?", a: "Go to Inventory → Stock In. Select the supplier and products received, enter quantities and unit costs, then click 'Confirm Stock In'. The system automatically updates your inventory levels." },
   { q: "How do I process a sale at POS?", a: "Navigate to Sales → POS. Click products to add them to the cart. Apply discounts if needed, select a payment method, and click 'Charge'. A receipt will be generated automatically." },
   { q: "How do I create a purchase order?", a: "Go to Purchase Orders → click 'New PO'. Select the supplier, add the products and quantities you need to order, set an expected delivery date, and submit. You can track the PO status in the Purchase Orders list." },

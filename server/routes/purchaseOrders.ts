@@ -32,7 +32,7 @@ r.get("/:id", async (req, res) => {
   const [po] = await q(`${SELECT} WHERE po.id = $1`, [id]);
   if (!po) throw new HttpError(404, "Not found.");
   const lines = await q(
-    `SELECT i.id, i.product_id, p.name AS product, p.sku, i.qty, i.unit_cost::float8 AS unit_cost
+    `SELECT i.id, i.product_id, p.name AS product, i.qty, i.unit_cost::float8 AS unit_cost
      FROM purchase_order_items i JOIN products p ON p.id = i.product_id WHERE i.po_id = $1 ORDER BY i.id`,
     [id],
   );

@@ -4,7 +4,7 @@ import { useToast } from "../components/ui/Toast";
 import { useApi, post } from "../lib/api";
 import { CardGridSkeleton } from "../components/ui/Skeleton";
 
-interface Product { id: number; name: string; sku: string; price: number; category: string | null; stock: number; }
+interface Product { id: number; name: string; price: number; category: string | null; stock: number; }
 interface CustomerOption { id: number; name: string; status: string; }
 interface CartItem { product: Product; qty: number; }
 interface ReceiptData {
@@ -41,7 +41,7 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
 
   const filtered = catalog.filter(p =>
     (categoryFilter === "All" || (p.category ?? "Uncategorised") === categoryFilter) &&
-    (p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()))
+    (p.name.toLowerCase().includes(search.toLowerCase()))
   );
 
   const addToCart = (product: Product) => {
@@ -139,7 +139,6 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
                   {p.stock === 0 && <span className="text-[10px] text-red-600 font-semibold">Out</span>}
                 </div>
                 <div className="text-xs font-semibold text-slate-800 mb-1 line-clamp-2">{p.name}</div>
-                <div className="text-[10px] text-slate-400 font-mono mb-2">{p.sku}</div>
                 <div className="text-sm font-bold text-orange-700">${p.price.toFixed(2)}</div>
               </button>
             ))}

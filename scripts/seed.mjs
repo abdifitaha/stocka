@@ -12,17 +12,17 @@ const cats = [["Electronics", "#ea580c"], ["Clothing", "#fb923c"], ["Furniture",
 for (const [name, color] of cats) await run("INSERT INTO categories (name, color) VALUES ($1, $2)", [name, color]);
 
 const products = [
-  ["LP-15-2024", "Laptop Pro 15", "Electronics", 1299.99, 980, 45, 10],
-  ["WH-BT-400", "Wireless Headphones", "Electronics", 189.99, 110, 8, 15],
-  ["OC-ERG-01", "Office Chair Ergonomic", "Furniture", 549.0, 330, 0, 5],
-  ["RS-X3-42", "Running Shoes X3", "Clothing", 129.95, 70, 120, 20],
-  ["PD-18V-PRO", "Power Drill 18V", "Tools", 219.99, 140, 34, 8],
-  ["SD-140-WHT", "Standing Desk 140cm", "Furniture", 799.0, 520, 12, 5],
-  ["MK-TKL-BLU", "Mechanical Keyboard", "Electronics", 149.99, 85, 3, 10],
-  ["YM-PREM-GRN", "Yoga Mat Premium", "Clothing", 79.99, 35, 67, 25],
+  ["Laptop Pro 15", "Electronics", 1299.99, 980, 45, 10],
+  ["Wireless Headphones", "Electronics", 189.99, 110, 8, 15],
+  ["Office Chair Ergonomic", "Furniture", 549.0, 330, 0, 5],
+  ["Running Shoes X3", "Clothing", 129.95, 70, 120, 20],
+  ["Power Drill 18V", "Tools", 219.99, 140, 34, 8],
+  ["Standing Desk 140cm", "Furniture", 799.0, 520, 12, 5],
+  ["Mechanical Keyboard", "Electronics", 149.99, 85, 3, 10],
+  ["Yoga Mat Premium", "Clothing", 79.99, 35, 67, 25],
 ];
-for (const [sku, name, cat, price, cost, stock, reorder] of products)
-  await run("INSERT INTO products (sku, name, category_id, price, cost, stock, reorder) VALUES ($1, $2, (SELECT id FROM categories WHERE name = $3), $4, $5, $6, $7)", [sku, name, cat, price, cost, stock, reorder]);
+for (const [name, cat, price, cost, stock, reorder] of products)
+  await run("INSERT INTO products (name, category_id, price, cost, stock, reorder) VALUES ($1, (SELECT id FROM categories WHERE name = $2), $3, $4, $5, $6)", [name, cat, price, cost, stock, reorder]);
 
 const customers = [
   ["Meridian Corp", "orders@meridiancorp.com", "+1 (555) 210-4400", "San Francisco", "Active"],

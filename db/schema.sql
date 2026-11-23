@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE TABLE IF NOT EXISTS products (
   id SERIAL PRIMARY KEY,
-  sku TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   description TEXT NOT NULL DEFAULT '',
@@ -127,3 +126,5 @@ CREATE INDEX IF NOT EXISTS orders_created_idx ON orders (created_at);
 CREATE INDEX IF NOT EXISTS order_items_order_idx ON order_items (order_id);
 CREATE INDEX IF NOT EXISTS movements_product_idx ON stock_movements (product_id, created_at);
 CREATE INDEX IF NOT EXISTS po_items_po_idx ON purchase_order_items (po_id);
+
+ALTER TABLE products DROP COLUMN IF EXISTS sku;

@@ -14,7 +14,7 @@ interface DashboardData {
   salesByMonth: { month: string; revenue: number; orders: number; returns: number }[];
   categoryData: { name: string; color: string; value: number }[];
   recentOrders: { id: number; code: string; customer: string | null; date: string; status: string; total: number; items: number }[];
-  inventoryAlerts: { id: number; product: string; sku: string; stock: number; reorder: number; supplier: string | null }[];
+  inventoryAlerts: { id: number; product: string; stock: number; reorder: number; supplier: string | null }[];
 }
 
 const money = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -187,7 +187,6 @@ export default function Dashboard() {
                     {alert.stock === 0 ? "Out" : `${alert.stock} left`}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-mono">{alert.sku}</p>
                 <p className="text-[10px] text-slate-500 mt-0.5">Supplier: {alert.supplier ?? "—"}</p>
               </div>
             ))}

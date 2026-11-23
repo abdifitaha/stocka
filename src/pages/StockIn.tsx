@@ -6,7 +6,7 @@ import { useToast } from "../components/ui/Toast";
 import { post, useApi, withQuery } from "../lib/api";
 import { TableSkeleton } from "../components/ui/Skeleton";
 
-interface ProductOption { id: number; code: string; name: string; sku: string; cost: number; stock: number; }
+interface ProductOption { id: number; code: string; name: string; cost: number; stock: number; }
 interface SupplierOption { id: number; name: string; }
 interface Movement { id: number; ref: string; product: string; qty: number; unit_cost: number | null; supplier: string | null; note: string; reason: string; user: string | null; created_at: string; }
 interface LineItem { product: ProductOption | null; qty: number; cost: number; }

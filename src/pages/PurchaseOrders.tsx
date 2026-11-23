@@ -13,7 +13,7 @@ interface PO {
   id: number; code: string; supplier_id: number | null; supplier: string | null; status: string;
   expected_date: string | null; note: string; created_at: string; items: number; total: number;
 }
-interface POLine { id: number; product_id: number; product: string; sku: string; qty: number; unit_cost: number; }
+interface POLine { id: number; product_id: number; product: string; qty: number; unit_cost: number; }
 interface NewPOLine { product_id: number | ""; qty: number; cost: number; }
 interface NewPO {
   supplier_id: number; status: "Draft" | "Sent"; expected_date: string; note: string;

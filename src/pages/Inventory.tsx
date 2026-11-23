@@ -33,7 +33,7 @@ export default function Inventory() {
     <div className="p-7 space-y-6 overflow-y-auto h-full">
       <div className="grid grid-cols-4 gap-5">
         {[
-          { label: "Total SKUs", value: totalProducts, icon: Package, color: "bg-orange-600" },
+          { label: "Total products", value: totalProducts, icon: Package, color: "bg-orange-600" },
           { label: "Out of Stock", value: outOfStock, icon: AlertTriangle, color: "bg-red-500" },
           { label: "Low Stock", value: lowStock, icon: TrendingDown, color: "bg-amber-500" },
           { label: "Inventory Value", value: `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: ArrowUpDown, color: "bg-emerald-600" },

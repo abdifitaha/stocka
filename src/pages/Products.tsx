@@ -11,7 +11,7 @@ const statusStyle: Record<string, string> = {
 };
 
 interface Product {
-  id: number; code: string; name: string; category: string | null; category_id: number | null; sku: string;
+  id: number; code: string; name: string; category: string | null; category_id: number | null;
   price: number; cost: number; stock: number; reorder: number; status: string;
 }
 interface Category { id: number; name: string }
@@ -27,9 +27,9 @@ function ProductModal({ product, categories, saving, onClose, onSave }: {
   const [form, setForm] = useState<Partial<Product>>(product || {});
 
   const handleSave = () => {
-    if (!form.name || !form.sku) return;
+    if (!form.name) return;
     onSave({
-      name: form.name, sku: form.sku, category_id: form.category_id || null,
+      name: form.name, category_id: form.category_id || null,
       price: Number(form.price) || 0, stock: Number(form.stock) || 0, reorder: Number(form.reorder) || 0,
     });
   };
@@ -51,13 +51,7 @@ function ProductModal({ product, categories, saving, onClose, onSave }: {
                 className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400"
                 placeholder="e.g. Laptop Pro 15" />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">SKU *</label>
-              <input value={form.sku || ""} onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 font-mono"
-                placeholder="LP-15-2024" />
-            </div>
-            <div>
+            <div className="col-span-2">
               <label className="block text-xs font-semibold text-slate-600 mb-1">Category</label>
               <select value={form.category_id ?? ""} onChange={e => setForm(f => ({ ...f, category_id: e.target.value ? Number(e.target.value) : null }))}
                 className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 bg-white">
@@ -113,7 +107,7 @@ export default function Products() {
 
   const filtered = products.filter(p =>
     (categoryFilter === "All" || p.category === categoryFilter) &&
-    (p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()))
+    (p.name.toLowerCase().includes(search.toLowerCase()))
   );
 
   const handleSave = async (body: Record<string, unknown>) => {
@@ -177,7 +171,6 @@ export default function Products() {
             <thead className="sticky top-0 z-10">
               <tr className="bg-slate-50 text-slate-500 text-xs border-b border-slate-100">
                 <th className="text-left px-5 py-3 font-semibold">Product</th>
-                <th className="text-left px-4 py-3 font-semibold">SKU</th>
                 <th className="text-left px-4 py-3 font-semibold">Category</th>
                 <th className="text-right px-4 py-3 font-semibold">Price</th>
                 <th className="text-right px-4 py-3 font-semibold">Stock</th>
@@ -192,7 +185,6 @@ export default function Products() {
                     <div className="font-semibold text-slate-800 text-xs">{p.name}</div>
                     <div className="text-[10px] text-slate-400 font-mono">{p.code}</div>
                   </td>
-                  <td className="px-4 py-3.5 font-mono text-xs text-slate-600">{p.sku}</td>
                   <td className="px-4 py-3.5 text-xs text-slate-600">{p.category ?? "—"}</td>
                   <td className="px-4 py-3.5 text-right font-semibold text-slate-900 text-xs">${p.price.toFixed(2)}</td>
                   <td className="px-4 py-3.5 text-right text-xs">

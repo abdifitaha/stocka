@@ -14,7 +14,7 @@ const monthly = () =>
      GROUP BY m ORDER BY m`);
 
 const alerts = () =>
-  q(`SELECT p.id, p.name AS product, p.sku, p.stock, p.reorder,
+  q(`SELECT p.id, p.name AS product, p.stock, p.reorder,
        (SELECT s.name FROM stock_movements m JOIN suppliers s ON s.id = m.supplier_id
          WHERE m.product_id = p.id AND m.type = 'in' ORDER BY m.created_at DESC LIMIT 1) AS supplier
      FROM products p WHERE p.stock <= p.reorder ORDER BY p.stock, p.name LIMIT 20`);

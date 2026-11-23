@@ -18,12 +18,11 @@ export const categories = crud({
 
 export const products = crud({
   table: "products",
-  select: `SELECT t.id, t.sku, t.name, t.description, t.category_id, c.name AS category,
+  select: `SELECT t.id, t.name, t.description, t.category_id, c.name AS category,
     t.price::float8 AS price, t.cost::float8 AS cost, t.stock, t.reorder, t.created_at, ${lpad("PRD")} AS code,
     CASE WHEN t.stock = 0 THEN 'Out of Stock' WHEN t.stock <= t.reorder THEN 'Low Stock' ELSE 'In Stock' END AS status
     FROM products t LEFT JOIN categories c ON c.id = t.category_id`,
   schema: {
-    sku: { type: "string", required: true, max: 60 },
     name: { type: "string", required: true, max: 200 },
     category_id: { type: "id", nullable: true },
     description: { type: "string", max: 1000 },
@@ -33,7 +32,7 @@ export const products = crud({
     reorder: { type: "int", max: 1e8 },
   },
   orderBy: "t.name",
-  search: ["t.name", "t.sku", "c.name"],
+  search: ["t.name", "c.name"],
   filters: { category_id: "t.category_id" },
 });
 

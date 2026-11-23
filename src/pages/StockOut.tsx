@@ -8,7 +8,7 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 
 const reasons = ["Damaged / Defective", "Internal Use", "Expired / Obsolete", "Customer Return", "Adjustment", "Loss / Theft", "Quality Control Reject"];
 
-interface ProductOption { id: number; code: string; name: string; sku: string; cost: number; stock: number; }
+interface ProductOption { id: number; code: string; name: string; cost: number; stock: number; }
 interface Movement { id: number; ref: string; qty: number; unit_cost: number | null; reason: string; note: string; user: string | null; created_at: string; cost?: number; }
 interface LineItem { product: ProductOption | null; qty: number; reason: string; }
 

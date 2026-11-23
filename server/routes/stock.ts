@@ -6,7 +6,7 @@ import { parseItems } from "./orders.js";
 
 const r = Router();
 
-const SELECT = `SELECT m.id, m.ref, m.type, m.product_id, p.name AS product, p.sku, m.qty, m.reason,
+const SELECT = `SELECT m.id, m.ref, m.type, m.product_id, p.name AS product, m.qty, m.reason,
   m.supplier_id, s.name AS supplier, m.unit_cost::float8 AS unit_cost, m.note, u.email AS "user", m.created_at
   FROM stock_movements m
   JOIN products p ON p.id = m.product_id
