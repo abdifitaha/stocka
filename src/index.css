@@ -41,3 +41,8 @@ html, body {
   #receipt-print, #receipt-print * { visibility: visible; }
   #receipt-print { position: fixed; left: 0; top: 0; width: 80mm; border: none; }
 }
+
+/* number inputs: no increment arrows */
+input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
