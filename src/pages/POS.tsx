@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Plus, Minus, Printer, CreditCard, Banknote, Smartphone, X, Check, Tag, Receipt } from "lucide-react";
 import { useToast } from "../components/ui/Toast";
 import { useApi, post } from "../lib/api";
@@ -73,7 +73,7 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
       // The server prices the items, records the sale and takes the stock out in one step.
       const order = await post<{ code: string }>("/api/orders", {
         source: "pos",
-        status: "Delivered",
+        status: "Processing",
         customer_id: customerId === "" ? undefined : customerId,
         items: cart.map(i => ({ product_id: i.product.id, qty: i.qty })),
       });
@@ -98,6 +98,13 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
   };
 
   const handleNewSale = () => setReceipt(null);
+
+  useEffect(() => {
+    if (!receipt) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setReceipt(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [receipt]);
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -262,8 +269,11 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
 
       {/* Receipt Modal */}
       {receipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-80 border border-slate-100 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={handleNewSale}>
+          <div onClick={e => e.stopPropagation()} className="relative bg-white rounded-2xl shadow-2xl w-80 border border-slate-100 overflow-hidden">
+            <button onClick={handleNewSale} aria-label="Close" className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors">
+              <X size={15} />
+            </button>
             <div className="bg-emerald-600 px-6 py-5 text-center">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Check size={22} className="text-white" />
@@ -272,10 +282,12 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
               <p className="text-emerald-100 text-xs mt-0.5">{receipt.payMethod.toUpperCase()}</p>
             </div>
             <div className="p-5">
-              <div className="border border-dashed border-slate-200 rounded-xl p-4 mb-4 font-mono text-xs">
+              <div id="receipt-print" className="border border-dashed border-slate-200 rounded-xl p-4 mb-4 font-mono text-xs">
                 <div className="text-center font-bold text-slate-800 mb-3">stocka POS</div>
                 <div className="flex justify-between mb-1 text-slate-500"><span>Order</span><span>{receipt.code}</span></div>
                 <div className="flex justify-between mb-3 text-slate-500"><span>Customer</span><span>{receipt.customer}</span></div>
+                <div className="flex justify-between mb-3 text-slate-500"><span>Status</span><span>Processing</span></div>
+                <div className="flex justify-between mb-3 text-slate-500"><span>Paid by</span><span>{receipt.payMethod}</span></div>
                 <div className="border-t border-dashed border-slate-200 pt-3 space-y-1">
                   {receipt.items.map(i => (
                     <div key={i.product.id} className="flex justify-between text-slate-700">
@@ -293,7 +305,7 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
                 <div className="text-center text-slate-400 mt-3">— Thank you! —</div>
               </div>
               <div className="flex gap-2">
-                <button className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 rounded-lg font-medium">
+                <button onClick={() => window.print()} className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 rounded-lg font-medium">
                   <Printer size={13} /> Print
                 </button>
                 <button onClick={handleNewSale} className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-lg transition-colors">
