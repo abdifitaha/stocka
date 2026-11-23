@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { exportPdf } from "../lib/pdf";
 import { Plus, Search, Eye, X, ChevronDown, Download, Trash2 } from "lucide-react";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import Badge from "../components/ui/Badge";
@@ -104,10 +105,10 @@ function CreatePOModal({ suppliers, products, saving, onClose, onSave }: {
                     <option value="">Select product...</option>
                     {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
-                  <input type="number" min={1} value={line.qty} onChange={e => update(i, { qty: Number(e.target.value) })}
+                  <input type="number" min={1} value={line.qty || ""} onChange={e => update(i, { qty: Number(e.target.value) })}
                     placeholder="Qty"
                     className="w-16 text-xs border border-slate-200 rounded-lg px-2.5 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500/30" />
-                  <input type="number" min={0} step={0.01} value={line.cost} onChange={e => update(i, { cost: Number(e.target.value) })}
+                  <input type="number" min={0} step={0.01} value={line.cost || ""} onChange={e => update(i, { cost: Number(e.target.value) })}
                     placeholder="Cost"
                     className="w-20 text-xs border border-slate-200 rounded-lg px-2.5 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500/30" />
                   <span className="text-xs font-semibold text-slate-700 w-16 text-right">${(line.qty * line.cost).toFixed(2)}</span>
@@ -330,7 +331,14 @@ export default function PurchaseOrders({ onNavigate }: PurchaseOrdersProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="flex items-center gap-1.5 px-3 py-2 text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg font-medium">
+            <button onClick={() => exportPdf({
+                title: "Purchase Orders", subtitle: statusFilter === "All" ? "All statuses" : statusFilter,
+                summary: [["Purchase orders", String(filtered.length)], ["Total value", `$${filtered.filter(o => o.status !== "Cancelled").reduce((t, o) => t + o.total, 0).toLocaleString()}`]],
+                sections: [{ head: ["PO", "Supplier", "Created", "Expected", "Items", "Total", "Status"], rightAlign: [4, 5],
+                  rows: filtered.map(o => [o.code, o.supplier ?? "—", fmtDate(o.created_at), fmtDate(o.expected_date), o.items, `$${o.total.toLocaleString()}`, o.status]) }],
+                filename: "purchase-orders.pdf",
+              })}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg font-medium">
               <Download size={12} /> Export
             </button>
             <button onClick={() => setCreating(true)}

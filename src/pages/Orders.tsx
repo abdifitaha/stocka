@@ -5,6 +5,7 @@ import { Search, Eye, X, ChevronDown, Download } from "lucide-react";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import Badge from "../components/ui/Badge";
 import Pagination from "../components/ui/Pagination";
+import { exportPdf } from "../lib/pdf";
 import { Skeleton, TableSkeleton } from "../components/ui/Skeleton";
 
 interface Order {
@@ -58,7 +59,7 @@ function OrderDetailModal({ order, onClose, onChanged }: { order: Order; onClose
         <div className="p-6">
           <div className="bg-slate-50 rounded-xl p-4 mb-4">
             <p className="text-xs font-semibold text-slate-600 mb-1">Customer</p>
-            <p className="text-sm font-semibold text-slate-900">{order.customer ?? "Walk-in customer"}</p>
+            <p className="text-sm font-semibold text-slate-900">{order.customer ?? "Guest customer"}</p>
           </div>
 
           {loading && (
@@ -137,7 +138,7 @@ export default function Orders({ onNavigate }: OrdersProps) {
 
   const filtered = allOrders.filter(o =>
     (statusFilter === "All" || o.status === statusFilter) &&
-    (o.code.toLowerCase().includes(search.toLowerCase()) || (o.customer ?? "walk-in customer").toLowerCase().includes(search.toLowerCase()))
+    (o.code.toLowerCase().includes(search.toLowerCase()) || (o.customer ?? "guest customer").toLowerCase().includes(search.toLowerCase()))
   );
 
   const paginated = filtered.slice((page - 1) * PER, page * PER);
@@ -182,7 +183,14 @@ export default function Orders({ onNavigate }: OrdersProps) {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-slate-500">{filtered.length} orders · ${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-            <button className="flex items-center gap-1.5 px-3 py-2 text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors">
+            <button onClick={() => exportPdf({
+                title: "Orders", subtitle: statusFilter === "All" ? "All statuses" : statusFilter,
+                summary: [["Orders", String(filtered.length)], ["Total sales", `$${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`]],
+                sections: [{ head: ["Order ID", "Customer", "Date", "Items", "Total", "Status"], rightAlign: [3, 4],
+                  rows: filtered.map(o => [o.code, o.customer ?? "Guest customer", new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), o.items, `$${o.total.toLocaleString()}`, o.status]) }],
+                filename: "orders.pdf",
+              })}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors">
               <Download size={12} /> Export
             </button>
           </div>
@@ -208,7 +216,7 @@ export default function Orders({ onNavigate }: OrdersProps) {
                   <tr key={o.id} className={`border-t border-slate-50 hover:bg-orange-50/30 transition-colors ${i % 2 ? "bg-slate-50/30" : ""}`}>
                     <td className="px-5 py-3.5 font-mono text-xs text-slate-600">{o.code}</td>
                     <td className="px-4 py-3.5">
-                      <div className="text-xs font-semibold text-slate-800">{o.customer ?? "Walk-in customer"}</div>
+                      <div className="text-xs font-semibold text-slate-800">{o.customer ?? "Guest customer"}</div>
                     </td>
                     <td className="px-4 py-3.5 text-xs text-slate-500">{fmtDate(o.created_at)}</td>
                     <td className="px-4 py-3.5 text-right text-xs text-slate-700">{o.items}</td>

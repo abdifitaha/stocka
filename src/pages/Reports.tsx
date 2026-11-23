@@ -1,21 +1,62 @@
+import { useState } from "react";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import { Download } from "lucide-react";
 import { useApi } from "../lib/api";
+import { exportPdf } from "../lib/pdf";
 import { ChartCardSkeleton, Skeleton, StatCardsSkeleton, TableCardSkeleton } from "../components/ui/Skeleton";
 
 interface ReportsData {
   kpis: { revenue: number; orders: number; avg_order: number; cancelled: number; customers: number; stock_value: number };
-  salesByMonth: { month: string; key: string; revenue: number; orders: number; returns: number }[];
+  salesByMonth: { month: string; revenue: number; prevRevenue: number; orders: number; returns: number }[];
   topProducts: { name: string; units: number; revenue: number }[];
 }
 
 const money = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
+const fmt = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const PRESETS = ["This Month", "Last Quarter", "This Year", "Custom"] as const;
+type Preset = (typeof PRESETS)[number];
+
+function presetRange(p: Preset): { from: string; to: string } {
+  const now = new Date();
+  const y = now.getFullYear();
+  if (p === "This Year") return { from: `${y}-01-01`, to: iso(now) };
+  if (p === "Last Quarter") {
+    const q = Math.floor(now.getMonth() / 3);
+    return { from: iso(new Date(y, (q - 1) * 3, 1)), to: iso(new Date(y, q * 3, 0)) };
+  }
+  return { from: iso(new Date(y, now.getMonth(), 1)), to: iso(now) };
+}
+
 export default function Reports() {
-  const { data, loading, error } = useApi<ReportsData>("/api/reports");
+  const [preset, setPreset] = useState<Preset>("This Month");
+  const [range, setRange] = useState(() => presetRange("This Month"));
+  const pick = (p: Preset) => { setPreset(p); if (p !== "Custom") setRange(presetRange(p)); };
+  const { data, loading, error } = useApi<ReportsData>(`/api/reports?from=${range.from}&to=${range.to}`);
+
+  const exportReport = () => {
+    if (!data) return;
+    const { kpis: k, salesByMonth, topProducts } = data;
+    exportPdf({
+      title: "Sales Report",
+      subtitle: `From ${fmt(range.from)} to ${fmt(range.to)}`,
+      summary: [
+        ["Total sales", money(k.revenue)], ["Orders placed", String(k.orders)], ["Average per order", `$${k.avg_order.toFixed(2)}`],
+        ["Cancelled orders", String(k.cancelled)], ["Customers who bought", String(k.customers)],
+      ],
+      sections: [
+        { title: "Sales over time", head: ["Date", "Sales", "Orders", "Cancelled"], rightAlign: [1, 2, 3],
+          rows: salesByMonth.map(d => [d.month, money(d.revenue), d.orders, d.returns]) },
+        { title: "Best selling products", head: ["Product", "Sales", "Units sold"], rightAlign: [1, 2],
+          rows: topProducts.map(p => [p.name, money(p.revenue), p.units]) },
+      ],
+      filename: `report-${range.from}-to-${range.to}.pdf`,
+    });
+  };
 
   if (loading && !data) {
     return (
@@ -40,23 +81,31 @@ export default function Reports() {
     { label: "Return Rate", value: `${totalOrders ? ((k.cancelled / totalOrders) * 100).toFixed(1) : "0.0"}%` },
     { label: "Revenue / Customer", value: k.customers ? money(k.revenue / k.customers) : "$0" },
   ];
-  // Previous period = the month before each bar
-  const monthlyComparison = salesByMonth.map((d, i) => ({ ...d, prevRevenue: i > 0 ? salesByMonth[i - 1].revenue : 0 }));
+  const monthlyComparison = salesByMonth;
   const salesData = salesByMonth;
   const totalTopRevenue = topProducts.reduce((s, p) => s + p.revenue, 0);
 
   return (
     <div className="p-7 space-y-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          {["This Month", "Last Quarter", "YTD", "Custom"].map((t, i) => (
-            <button key={t}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${i === 0 ? "bg-orange-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+        <div className="flex flex-wrap items-center gap-2">
+          {PRESETS.map(t => (
+            <button key={t} onClick={() => pick(t)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${preset === t ? "bg-orange-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
               {t}
             </button>
           ))}
+          {preset === "Custom" && (
+            <>
+              <input type="date" value={range.from} max={range.to} onChange={e => e.target.value && setRange(r => ({ ...r, from: e.target.value }))}
+                className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white" />
+              <span className="text-xs text-slate-400">to</span>
+              <input type="date" value={range.to} min={range.from} onChange={e => e.target.value && setRange(r => ({ ...r, to: e.target.value }))}
+                className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white" />
+            </>
+          )}
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium rounded-lg transition-colors">
+        <button onClick={exportReport} className="flex items-center gap-2 px-4 py-2 text-sm border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium rounded-lg transition-colors">
           <Download size={14} /> Export Report
         </button>
       </div>

@@ -3,16 +3,6 @@ import { q } from "../db.js";
 
 const r = Router();
 
-/** Last 7 calendar months (including empty ones): revenue, order count, cancelled count. */
-const monthly = () =>
-  q(`SELECT to_char(m, 'Mon') AS month, to_char(m, 'YYYY-MM') AS key,
-       COALESCE(sum(o.total) FILTER (WHERE o.status <> 'Cancelled'), 0)::float8 AS revenue,
-       (count(o.id) FILTER (WHERE o.status <> 'Cancelled'))::int AS orders,
-       (count(o.id) FILTER (WHERE o.status = 'Cancelled'))::int AS returns
-     FROM generate_series(date_trunc('month', now()) - interval '6 months', date_trunc('month', now()), interval '1 month') m
-     LEFT JOIN orders o ON date_trunc('month', o.created_at) = m
-     GROUP BY m ORDER BY m`);
-
 const alerts = () =>
   q(`SELECT p.id, p.name AS product, p.stock, p.reorder,
        (SELECT s.name FROM stock_movements m JOIN suppliers s ON s.id = m.supplier_id
@@ -82,22 +72,36 @@ r.get("/inventory", async (_req, res) => {
   res.json({ totals, stockByCategory, movements, inventoryAlerts });
 });
 
-r.get("/reports", async (_req, res) => {
-  const [[kpis], salesByMonth, topProducts, categoryData] = await Promise.all([
+const addDays = (d: string, n: number) => new Date(Date.parse(d) + n * 86400000).toISOString().slice(0, 10);
+
+r.get("/reports", async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  let from = dateParam(req.query.from) ?? `${today.slice(0, 7)}-01`;
+  let to = dateParam(req.query.to) ?? today;
+  if (from > to) [from, to] = [to, from];
+  // previous period = the same number of days right before `from`
+  const span = Math.round((Date.parse(to) - Date.parse(from)) / 86400000) + 1;
+  const prevTo = addDays(from, -1);
+  const prevFrom = addDays(from, -span);
+  const inRange = "created_at >= $1::date AND created_at < $2::date + 1";
+  const [[kpis], salesByMonth, previous, topProducts, categoryData] = await Promise.all([
     q(`SELECT
-         (SELECT COALESCE(sum(total), 0)::float8 FROM orders WHERE status <> 'Cancelled') AS revenue,
-         (SELECT count(*)::int FROM orders WHERE status <> 'Cancelled') AS orders,
-         (SELECT COALESCE(avg(total), 0)::float8 FROM orders WHERE status <> 'Cancelled') AS avg_order,
-         (SELECT count(*)::int FROM orders WHERE status = 'Cancelled') AS cancelled,
-         (SELECT count(*)::int FROM customers) AS customers,
-         (SELECT COALESCE(sum(stock * cost), 0)::float8 FROM products) AS stock_value`),
-    monthly(),
+         (SELECT COALESCE(sum(total), 0)::float8 FROM orders WHERE status <> 'Cancelled' AND ${inRange}) AS revenue,
+         (SELECT count(*)::int FROM orders WHERE status <> 'Cancelled' AND ${inRange}) AS orders,
+         (SELECT COALESCE(avg(total), 0)::float8 FROM orders WHERE status <> 'Cancelled' AND ${inRange}) AS avg_order,
+         (SELECT count(*)::int FROM orders WHERE status = 'Cancelled' AND ${inRange}) AS cancelled,
+         (SELECT count(DISTINCT customer_id)::int FROM orders WHERE status <> 'Cancelled' AND ${inRange}) AS customers,
+         (SELECT COALESCE(sum(stock * cost), 0)::float8 FROM products) AS stock_value`, [from, to]),
+    series(from, to),
+    series(prevFrom, prevTo),
     q(`SELECT i.name, sum(i.qty)::int AS units, sum(i.qty * i.unit_price)::float8 AS revenue
-       FROM order_items i JOIN orders o ON o.id = i.order_id WHERE o.status <> 'Cancelled'
-       GROUP BY i.name ORDER BY revenue DESC LIMIT 10`),
+       FROM order_items i JOIN orders o ON o.id = i.order_id
+       WHERE o.status <> 'Cancelled' AND o.created_at >= $1::date AND o.created_at < $2::date + 1
+       GROUP BY i.name ORDER BY revenue DESC LIMIT 10`, [from, to]),
     categoryShare(),
   ]);
-  res.json({ kpis, salesByMonth, topProducts, categoryData });
+  const withPrev = (salesByMonth as { revenue: number }[]).map((d, i) => ({ ...d, prevRevenue: (previous as { revenue: number }[])[i]?.revenue ?? 0 }));
+  res.json({ kpis, salesByMonth: withPrev, topProducts, categoryData });
 });
 
 export default r;
