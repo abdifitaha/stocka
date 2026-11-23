@@ -85,7 +85,8 @@ function CreateSupplierModal({ onClose, onSave }: { onClose: () => void; onSave:
     } finally { setSaving(false); }
   };
 
-  const Field = ({ label, k, type = "text", placeholder, icon: Icon }: { label: string; k: keyof SupplierFormData; type?: string; placeholder: string; icon?: React.ElementType }) => (
+  // Called as a function (not used as a <Field/> element) so the input isn't remounted on every keystroke.
+  const field = ({ label, k, type = "text", placeholder, icon: Icon }: { label: string; k: keyof SupplierFormData; type?: string; placeholder: string; icon?: React.ElementType }) => (
     <div>
       <label className="block text-xs font-semibold text-slate-600 mb-1.5">{label}</label>
       <div className="relative">
@@ -107,13 +108,13 @@ function CreateSupplierModal({ onClose, onSave }: { onClose: () => void; onSave:
         </div>
 
         <div className="p-6 space-y-4">
-          <Field label="Company Name *" k="name" placeholder="e.g. TechDistrib Global" icon={Globe} />
+          {field({ label: "Company Name *", k: "name", placeholder: "e.g. TechDistrib Global", icon: Globe })}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Contact Person *" k="contact" placeholder="Alan Park" />
-            <Field label="Email *" k="email" type="email" placeholder="contact@supplier.com" icon={Mail} />
+            {field({ label: "Contact Person *", k: "contact", placeholder: "Alan Park" })}
+            {field({ label: "Email *", k: "email", type: "email", placeholder: "contact@supplier.com", icon: Mail })}
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Country *" k="country" placeholder="USA" icon={Globe} />
+            {field({ label: "Country *", k: "country", placeholder: "USA", icon: Globe })}
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5">Lead Time (days)</label>
               <div className="relative">
