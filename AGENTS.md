@@ -10,6 +10,7 @@ Inventory management app built with React, Vite and Tailwind CSS.
 - `pnpm format` - format with oxfmt
 - `pnpm db:setup` - create the database tables (needs `DATABASE_URL` in `.env`, see `.env.example`)
 - `pnpm db:seed` - optional demo data for an empty database
+- `pnpm db:reset` - delete all products, orders, customers etc. but keep users and settings
 
 ## Project Structure
 
