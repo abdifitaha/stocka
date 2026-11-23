@@ -55,7 +55,7 @@ export default function Inventory() {
 
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
         <h3 className="text-sm font-semibold text-slate-800 mb-1">Stock by Category</h3>
-        <p className="text-xs text-slate-500 mb-4">Units on hand and number of products</p>
+        <p className="text-xs text-slate-500 mb-4">Quantity on hand and number of products</p>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={stockByCategory} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -63,7 +63,7 @@ export default function Inventory() {
             <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }} />
             <Bar dataKey="products" fill="#fed7aa" radius={[4, 4, 0, 0]} name="Products" />
-            <Bar dataKey="stock" fill="#ea580c" radius={[4, 4, 0, 0]} name="Units in stock" />
+            <Bar dataKey="stock" fill="#ea580c" radius={[4, 4, 0, 0]} name="Quantity in stock" />
           </BarChart>
         </ResponsiveContainer>
       </div>
