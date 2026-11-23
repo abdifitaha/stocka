@@ -32,10 +32,11 @@ export default function StockIn({ onNavigate }: StockInProps) {
   const supplierOptions = suppliers.data ?? [];
 
   const history = useMemo(() => {
-    const groups = new Map<string, { ref: string; date: string; supplier: string; note: string; items: number; total: number; user: string }>();
+    const groups = new Map<string, { ref: string; date: string; supplier: string; note: string; items: number; total: number; user: string; lines: { name: string; qty: number; cost: number }[] }>();
     for (const m of movements.data ?? []) {
-      const g = groups.get(m.ref) ?? { ref: m.ref, date: m.created_at, supplier: m.supplier ?? "—", note: m.note || m.reason || "—", items: 0, total: 0, user: m.user ?? "System" };
+      const g = groups.get(m.ref) ?? { ref: m.ref, date: m.created_at, supplier: m.supplier ?? "—", note: m.note || m.reason || "—", items: 0, total: 0, user: m.user ?? "System", lines: [] };
       g.items += 1;
+      g.lines.push({ name: m.product, qty: m.qty, cost: m.unit_cost ?? 0 });
       g.total += m.qty * (m.unit_cost ?? 0);
       groups.set(m.ref, g);
     }
@@ -163,11 +164,11 @@ export default function StockIn({ onNavigate }: StockInProps) {
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-slate-500">{line.product?.stock ?? "—"}</td>
                       <td className="px-4 py-3">
-                        <input type="number" min={1} value={line.qty} onChange={e => updateLine(i, { qty: Number(e.target.value) })}
+                        <input type="number" min={1} value={line.qty || ""} onChange={e => updateLine(i, { qty: Number(e.target.value) })}
                           className="w-20 text-xs border border-slate-200 rounded-md px-2 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500/30 ml-auto block" />
                       </td>
                       <td className="px-4 py-3">
-                        <input type="number" min={0} step={0.01} value={line.cost} onChange={e => updateLine(i, { cost: Number(e.target.value) })}
+                        <input type="number" min={0} step={0.01} value={line.cost || ""} onChange={e => updateLine(i, { cost: Number(e.target.value) })}
                           className="w-24 text-xs border border-slate-200 rounded-md px-2 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500/30 ml-auto block" />
                       </td>
                       <td className="px-4 py-3 text-right text-xs font-semibold text-slate-900">
@@ -236,7 +237,11 @@ export default function StockIn({ onNavigate }: StockInProps) {
                   <td className="px-5 py-3.5 text-xs text-slate-500">{fmtDate(h.date)}</td>
                   <td className="px-5 py-3.5 text-xs text-slate-700">{h.note}</td>
                   <td className="px-5 py-3.5 text-xs text-slate-700">{h.supplier}</td>
-                  <td className="px-5 py-3.5 text-xs text-slate-700">{h.items}</td>
+                  <td className="px-5 py-3.5 text-xs text-slate-700">
+                    {h.lines.map((l, n) => (
+                      <div key={n}>{l.name}: {l.qty} × ${l.cost.toLocaleString()}</div>
+                    ))}
+                  </td>
                   <td className="px-5 py-3.5 text-xs font-semibold text-slate-900">${h.total.toLocaleString()}</td>
                   <td className="px-5 py-3.5 text-xs text-slate-500">{h.user}</td>
                   <td className="px-5 py-3.5">

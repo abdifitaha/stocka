@@ -8,8 +8,8 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 
 const reasons = ["Damaged / Defective", "Internal Use", "Expired / Obsolete", "Customer Return", "Adjustment", "Loss / Theft", "Quality Control Reject"];
 
-interface ProductOption { id: number; code: string; name: string; cost: number; stock: number; }
-interface Movement { id: number; ref: string; qty: number; unit_cost: number | null; reason: string; note: string; user: string | null; created_at: string; cost?: number; }
+interface ProductOption { id: number; code: string; name: string; price: number; stock: number; }
+interface Movement { id: number; ref: string; qty: number; unit_cost: number | null; reason: string; note: string; user: string | null; created_at: string; cost?: number; product?: string; }
 interface LineItem { product: ProductOption | null; qty: number; reason: string; }
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -28,20 +28,22 @@ export default function StockOut({ onNavigate }: StockOutProps) {
   const products = useApi<ProductOption[]>("/api/products");
   const movements = useApi<Movement[]>(withQuery("/api/stock-movements", { type: "out" }));
   const productOptions = (products.data ?? []).filter(p => p.stock > 0);
-  const costById = useMemo(() => new Map((products.data ?? []).map(p => [p.id, p.cost])), [products.data]);
+  const priceById = useMemo(() => new Map((products.data ?? []).map(p => [p.id, p.price])), [products.data]);
 
   const history = useMemo(() => {
-    const groups = new Map<string, { ref: string; date: string; reason: string; items: number; total: number; user: string }>();
+    const groups = new Map<string, { ref: string; date: string; reason: string; items: number; total: number; user: string; lines: { name: string; qty: number; price: number }[] }>();
     for (const m of (movements.data ?? []) as (Movement & { product_id: number })[]) {
-      const g = groups.get(m.ref) ?? { ref: m.ref, date: m.created_at, reason: m.reason || m.note || "—", items: 0, total: 0, user: m.user ?? "System" };
+      const g = groups.get(m.ref) ?? { ref: m.ref, date: m.created_at, reason: m.reason || m.note || "—", items: 0, total: 0, user: m.user ?? "System", lines: [] };
       g.items += 1;
-      g.total += m.qty * (costById.get(m.product_id) ?? 0);
+      const price = priceById.get(m.product_id) ?? 0;
+      g.lines.push({ name: m.product ?? "Item", qty: m.qty, price });
+      g.total += m.qty * price;
       if (g.reason !== m.reason && m.reason) g.reason = "Multiple";
       groups.set(m.ref, g);
     }
     const q = search.trim().toLowerCase();
     return [...groups.values()].filter(h => !q || h.ref.toLowerCase().includes(q) || h.reason.toLowerCase().includes(q));
-  }, [movements.data, costById, search]);
+  }, [movements.data, priceById, search]);
 
   const addLine = () => setLines(l => [...l, { product: null, qty: 1, reason: reasons[0] }]);
   const removeLine = (i: number) => setLines(l => l.filter((_, idx) => idx !== i));
@@ -147,7 +149,7 @@ export default function StockOut({ onNavigate }: StockOutProps) {
                           {line.product?.stock ?? "—"}
                         </td>
                         <td className="px-4 py-3">
-                          <input type="number" min={1} value={line.qty} onChange={e => update(i, { qty: Number(e.target.value) })}
+                          <input type="number" min={1} value={line.qty || ""} onChange={e => update(i, { qty: Number(e.target.value) })}
                             className={`w-20 text-xs border rounded-md px-2 py-2 text-right focus:outline-none focus:ring-2 ml-auto block transition-colors ${over ? "border-red-400 focus:ring-red-500/30 bg-red-50" : "border-slate-200 focus:ring-orange-500/30"}`} />
                         </td>
                         <td className="px-4 py-3">
@@ -219,7 +221,11 @@ export default function StockOut({ onNavigate }: StockOutProps) {
                   <td className="px-5 py-3.5 font-mono text-xs text-slate-600">{h.ref}</td>
                   <td className="px-5 py-3.5 text-xs text-slate-500">{fmtDate(h.date)}</td>
                   <td className="px-5 py-3.5 text-xs text-slate-700">{h.reason}</td>
-                  <td className="px-5 py-3.5 text-xs text-slate-700">{h.items}</td>
+                  <td className="px-5 py-3.5 text-xs text-slate-700">
+                    {h.lines.map((l, n) => (
+                      <div key={n}>{l.name}: {l.qty} × ${l.price.toLocaleString()} = <span className="font-semibold">${(l.qty * l.price).toLocaleString()}</span></div>
+                    ))}
+                  </td>
                   <td className="px-5 py-3.5 text-xs font-semibold text-slate-900">${h.total.toLocaleString()}</td>
                   <td className="px-5 py-3.5 text-xs text-slate-500">{h.user}</td>
                   <td className="px-5 py-3.5">
