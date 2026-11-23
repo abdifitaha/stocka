@@ -30,7 +30,7 @@ export default function Sales() {
   const statuses = ["All", "Delivered", "Processing", "Shipped", "Cancelled"];
   const filtered = allOrders.filter(o =>
     (statusFilter === "All" || o.status === statusFilter) &&
-    (o.code.toLowerCase().includes(search.toLowerCase()) || (o.customer ?? "walk-in customer").toLowerCase().includes(search.toLowerCase()))
+    (o.code.toLowerCase().includes(search.toLowerCase()) || (o.customer ?? "guest customer").toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -112,7 +112,7 @@ export default function Sales() {
               {filtered.map((o, i) => (
                 <tr key={o.id} className={`border-t border-slate-50 hover:bg-orange-50/30 transition-colors ${i % 2 === 1 ? "bg-slate-50/30" : ""}`}>
                   <td className="px-5 py-3.5 font-mono text-xs text-slate-600">{o.code}</td>
-                  <td className="px-4 py-3.5 text-xs font-medium text-slate-800">{o.customer ?? "Walk-in customer"}</td>
+                  <td className="px-4 py-3.5 text-xs font-medium text-slate-800">{o.customer ?? "Guest customer"}</td>
                   <td className="px-4 py-3.5 text-xs text-slate-500">{fmtDate(o.created_at)}</td>
                   <td className="px-4 py-3.5 text-right text-xs text-slate-700">{o.items}</td>
                   <td className="px-4 py-3.5 text-right text-xs font-semibold text-slate-900">${o.total.toFixed(2)}</td>
@@ -153,7 +153,7 @@ export default function Sales() {
               </span>
             </div>
             <div className="p-6 space-y-4">
-              <div className="flex justify-between text-sm"><span className="text-slate-500">Customer</span><span className="font-semibold text-slate-900">{selectedOrder.customer ?? "Walk-in customer"}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-500">Customer</span><span className="font-semibold text-slate-900">{selectedOrder.customer ?? "Guest customer"}</span></div>
               <div className="flex justify-between text-sm"><span className="text-slate-500">Items</span><span className="font-semibold text-slate-900">{selectedOrder.items}</span></div>
               <div className="flex justify-between text-sm"><span className="text-slate-500">Order Total</span><span className="font-bold text-orange-700 text-base">${selectedOrder.total.toFixed(2)}</span></div>
             </div>

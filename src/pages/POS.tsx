@@ -79,7 +79,7 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
       });
       setReceipt({
         code: order.code,
-        customer: customers.find(c => c.id === customerId)?.name ?? "Walk-in Customer",
+        customer: customers.find(c => c.id === customerId)?.name ?? "Guest Customer",
         payMethod,
         items: cart,
         subtotal, discountAmt, taxAmt, total,
@@ -167,7 +167,7 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
           <label className="block text-[10px] font-semibold text-slate-500 mb-1">CUSTOMER</label>
           <select value={customerId} onChange={e => setCustomerId(e.target.value === "" ? "" : Number(e.target.value))}
             className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500/30 bg-white">
-            <option value="">Walk-in Customer</option>
+            <option value="">Guest Customer</option>
             {customers.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -220,7 +220,7 @@ export default function POS({ onNavigate: _onNavigate }: POSProps) {
                 </button>
               ))}
             </div>
-            <input type="number" min={0} value={discount} onChange={e => setDiscount(Number(e.target.value))}
+            <input type="number" min={0} value={discount || ""} onChange={e => setDiscount(Number(e.target.value))}
               className="flex-1 text-xs border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500/30" />
           </div>
         </div>

@@ -196,7 +196,7 @@ export default function Dashboard() {
                 {recentOrders.map((order, i) => (
                   <tr key={order.id} className={`border-t border-slate-50 hover:bg-slate-50/60 transition-colors ${i % 2 === 1 ? "bg-slate-50/30" : ""}`}>
                     <td className="px-5 py-3 font-mono text-xs text-slate-600">{order.code}</td>
-                    <td className="px-4 py-3 text-slate-800 font-medium text-xs">{order.customer ?? "Walk-in"}</td>
+                    <td className="px-4 py-3 text-slate-800 font-medium text-xs">{order.customer ?? "Guest"}</td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{fmtDate(order.date)}</td>
                     <td className="px-4 py-3 text-right text-slate-900 font-semibold text-xs">${order.total.toFixed(2)}</td>
                     <td className="px-4 py-3">
