@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -9,7 +10,7 @@ import { ChartCardSkeleton, DonutCardSkeleton, StatCardsSkeleton, TableCardSkele
 interface DashboardData {
   totals: {
     products: number; stock_value: number; low_stock: number; out_of_stock: number; customers: number; open_orders: number;
-    revenue_month: number; revenue_prev_month: number; orders_month: number;
+    revenue_period: number; orders_period: number;
   };
   salesByMonth: { month: string; revenue: number; orders: number; returns: number }[];
   categoryData: { name: string; color: string; value: number }[];
@@ -27,12 +28,53 @@ const statusColors: Record<string, string> = {
   Cancelled: "text-red-700 bg-red-50 border-red-200",
 };
 
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const PRESETS = ["Today", "This week", "This month", "Last month", "Custom"] as const;
+type Preset = (typeof PRESETS)[number];
+
+function presetRange(p: Preset): { from: string; to: string } {
+  const now = new Date();
+  const today = iso(now);
+  if (p === "Today") return { from: today, to: today };
+  if (p === "This week") {
+    const start = new Date(now);
+    start.setDate(now.getDate() - ((now.getDay() + 6) % 7)); // Monday
+    return { from: iso(start), to: today };
+  }
+  if (p === "Last month") return { from: iso(new Date(now.getFullYear(), now.getMonth() - 1, 1)), to: iso(new Date(now.getFullYear(), now.getMonth(), 0)) };
+  return { from: iso(new Date(now.getFullYear(), now.getMonth(), 1)), to: today };
+}
+
 export default function Dashboard() {
-  const { data, loading, error } = useApi<DashboardData>("/api/dashboard");
+  const [preset, setPreset] = useState<Preset>("This month");
+  const [range, setRange] = useState(() => presetRange("This month"));
+  const pick = (p: Preset) => { setPreset(p); if (p !== "Custom") setRange(presetRange(p)); };
+  const { data, loading, error } = useApi<DashboardData>(`/api/dashboard?from=${range.from}&to=${range.to}`);
+  const periodLabel = preset === "Custom" ? "Selected Dates" : preset;
+  const filterBar = (
+    <div className="flex flex-wrap items-center gap-2">
+      {PRESETS.map(p => (
+        <button key={p} onClick={() => pick(p)}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${preset === p ? "bg-orange-600 text-white border-orange-600" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}>
+          {p}
+        </button>
+      ))}
+      {preset === "Custom" && (
+        <>
+          <input type="date" value={range.from} max={range.to} onChange={e => e.target.value && setRange(r => ({ ...r, from: e.target.value }))}
+            className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white" />
+          <span className="text-xs text-slate-400">to</span>
+          <input type="date" value={range.to} min={range.from} onChange={e => e.target.value && setRange(r => ({ ...r, to: e.target.value }))}
+            className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white" />
+        </>
+      )}
+    </div>
+  );
   if (!data) {
     if (!loading) return <div className="p-7 text-sm text-red-500">{error || "No data"}</div>;
     return (
       <div className="p-7 space-y-6 overflow-y-auto h-full">
+        {filterBar}
         <StatCardsSkeleton />
         <div className="grid grid-cols-3 gap-5">
           <ChartCardSkeleton className="col-span-2" />
@@ -49,14 +91,15 @@ export default function Dashboard() {
   const categoryTotal = categoryData.reduce((sum, c) => sum + c.value, 0) || 1;
   const pct = (v: number) => Math.round((v / categoryTotal) * 100);
   const statCards = [
-    { label: "Revenue This Month", value: money(totals.revenue_month), icon: DollarSign, color: "bg-orange-600" },
-    { label: "Orders This Month", value: totals.orders_month.toLocaleString(), icon: ShoppingCart, color: "bg-amber-600" },
+    { label: `Revenue · ${periodLabel}`, value: money(totals.revenue_period), icon: DollarSign, color: "bg-orange-600" },
+    { label: `Orders · ${periodLabel}`, value: totals.orders_period.toLocaleString(), icon: ShoppingCart, color: "bg-amber-600" },
     { label: "Products", value: totals.products.toLocaleString(), icon: Package, color: "bg-emerald-600" },
     { label: "Customers", value: totals.customers.toLocaleString(), icon: Users, color: "bg-amber-500" },
   ];
 
   return (
     <div className="p-7 space-y-6 overflow-y-auto h-full">
+      {filterBar}
       {/* Stat cards */}
       <div className="grid grid-cols-4 gap-5">
         {statCards.map((card) => {
@@ -81,9 +124,9 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="text-sm font-semibold text-slate-800">Revenue Overview</h3>
-              <p className="text-xs text-slate-500">Monthly revenue and order volume</p>
+              <p className="text-xs text-slate-500">Revenue over the selected dates</p>
             </div>
-            <span className="text-xs text-slate-500">Last 7 months</span>
+            <span className="text-xs text-slate-500">{range.from === range.to ? range.from : `${range.from} → ${range.to}`}</span>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={salesData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>

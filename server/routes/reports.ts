@@ -23,7 +23,29 @@ const categoryShare = () =>
   q(`SELECT COALESCE(c.name, 'Uncategorised') AS name, COALESCE(c.color, '#94a3b8') AS color, count(p.id)::int AS value
      FROM products p LEFT JOIN categories c ON c.id = p.category_id GROUP BY c.id, c.name, c.color ORDER BY value DESC`);
 
-r.get("/dashboard", async (_req, res) => {
+const dateParam = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) ? v : null);
+
+/** Revenue and orders between two dates (inclusive): one point per day for ranges up to 31 days, otherwise per month. */
+const series = (from: string, to: string) => {
+  const days = (Date.parse(to) - Date.parse(from)) / 86400000;
+  const unit = days > 31 ? "month" : "day";
+  return q(
+    `SELECT to_char(b.d, $4::text) AS month,
+       COALESCE(sum(o.total) FILTER (WHERE o.status <> 'Cancelled'), 0)::float8 AS revenue,
+       (count(o.id) FILTER (WHERE o.status <> 'Cancelled'))::int AS orders,
+       (count(o.id) FILTER (WHERE o.status = 'Cancelled'))::int AS returns
+     FROM generate_series(date_trunc($3::text, $1::date), date_trunc($3::text, $2::date), ('1 ' || $3::text)::interval) b(d)
+     LEFT JOIN orders o ON date_trunc($3::text, o.created_at) = b.d AND o.created_at >= $1::date AND o.created_at < $2::date + 1
+     GROUP BY b.d ORDER BY b.d`,
+    [from, to, unit, unit === "month" ? "Mon YY" : "Mon DD"],
+  );
+};
+
+r.get("/dashboard", async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  let from = dateParam(req.query.from) ?? `${today.slice(0, 7)}-01`;
+  let to = dateParam(req.query.to) ?? today;
+  if (from > to) [from, to] = [to, from];
   const [[totals], salesByMonth, categoryData, recentOrders, inventoryAlerts] = await Promise.all([
     q(`SELECT
          (SELECT count(*)::int FROM products) AS products,
@@ -32,14 +54,14 @@ r.get("/dashboard", async (_req, res) => {
          (SELECT count(*)::int FROM products WHERE stock = 0) AS out_of_stock,
          (SELECT count(*)::int FROM customers) AS customers,
          (SELECT count(*)::int FROM orders WHERE status = 'Processing') AS open_orders,
-         (SELECT COALESCE(sum(total), 0)::float8 FROM orders WHERE status <> 'Cancelled' AND created_at >= date_trunc('month', now())) AS revenue_month,
-         (SELECT COALESCE(sum(total), 0)::float8 FROM orders WHERE status <> 'Cancelled' AND created_at >= date_trunc('month', now()) - interval '1 month' AND created_at < date_trunc('month', now())) AS revenue_prev_month,
-         (SELECT count(*)::int FROM orders WHERE status <> 'Cancelled' AND created_at >= date_trunc('month', now())) AS orders_month`),
-    monthly(),
+         (SELECT COALESCE(sum(total), 0)::float8 FROM orders WHERE status <> 'Cancelled' AND created_at >= $1::date AND created_at < $2::date + 1) AS revenue_period,
+         (SELECT count(*)::int FROM orders WHERE status <> 'Cancelled' AND created_at >= $1::date AND created_at < $2::date + 1) AS orders_period`, [from, to]),
+    series(from, to),
     categoryShare(),
     q(`SELECT o.id, 'ORD-' || lpad(o.id::text, 4, '0') AS code, c.name AS customer, o.created_at AS date, o.status, o.total::float8 AS total,
          COALESCE((SELECT sum(qty) FROM order_items i WHERE i.order_id = o.id), 0)::int AS items
-       FROM orders o LEFT JOIN customers c ON c.id = o.customer_id ORDER BY o.created_at DESC, o.id DESC LIMIT 5`),
+       FROM orders o LEFT JOIN customers c ON c.id = o.customer_id
+       WHERE o.created_at >= $1::date AND o.created_at < $2::date + 1 ORDER BY o.created_at DESC, o.id DESC LIMIT 5`, [from, to]),
     alerts(),
   ]);
   res.json({ totals, salesByMonth, categoryData, recentOrders, inventoryAlerts });
