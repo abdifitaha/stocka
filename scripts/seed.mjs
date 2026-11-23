@@ -35,13 +35,13 @@ const customers = [
 for (const c of customers) await run("INSERT INTO customers (name, email, phone, city, status) VALUES ($1, $2, $3, $4, $5)", c);
 
 const suppliers = [
-  ["TechDistrib Global", "Alan Park", "alan.park@techdistrib.com", "USA", 5, "Preferred"],
-  ["EuroComponents AG", "Lisa Müller", "l.muller@eurocomp.de", "Germany", 14, "Active"],
-  ["AsiaSource Ltd", "Jenny Chen", "jenny.chen@asiasource.hk", "Hong Kong", 21, "Active"],
-  ["FurniCraft Co.", "Marcus Webb", "m.webb@furnicraft.com", "Canada", 10, "Active"],
-  ["RapidGear Inc.", "Sofia Rossi", "sofia@rapidgear.it", "Italy", 18, "Suspended"],
+  ["TechDistrib Global", "Alan Park", "alan.park@techdistrib.com", "USA", "Preferred"],
+  ["EuroComponents AG", "Lisa Müller", "l.muller@eurocomp.de", "Germany", "Active"],
+  ["AsiaSource Ltd", "Jenny Chen", "jenny.chen@asiasource.hk", "Hong Kong", "Active"],
+  ["FurniCraft Co.", "Marcus Webb", "m.webb@furnicraft.com", "Canada", "Active"],
+  ["RapidGear Inc.", "Sofia Rossi", "sofia@rapidgear.it", "Italy", "Suspended"],
 ];
-for (const s of suppliers) await run("INSERT INTO suppliers (name, contact, email, country, lead_days, status) VALUES ($1, $2, $3, $4, $5, $6)", s);
+for (const s of suppliers) await run("INSERT INTO suppliers (name, contact, email, country, status) VALUES ($1, $2, $3, $4, $5)", s);
 
 // A few past orders (inserted directly so stock levels above stay as listed)
 const orders = [

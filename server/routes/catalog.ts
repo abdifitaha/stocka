@@ -56,7 +56,7 @@ export const customers = crud({
 
 export const suppliers = crud({
   table: "suppliers",
-  select: `SELECT t.id, t.name, t.contact, t.email, t.phone, t.country, t.lead_days, t.status, t.created_at, ${lpad("SUP")} AS code,
+  select: `SELECT t.id, t.name, t.contact, t.email, t.phone, t.country, t.status, t.created_at, ${lpad("SUP")} AS code,
     (SELECT count(DISTINCT i.product_id)::int FROM purchase_order_items i JOIN purchase_orders po ON po.id = i.po_id WHERE po.supplier_id = t.id) AS products
     FROM suppliers t`,
   schema: {
@@ -65,7 +65,6 @@ export const suppliers = crud({
     email: { type: "email", max: 200 },
     phone: { type: "string", max: 50 },
     country: { type: "string", max: 100 },
-    lead_days: { type: "int", max: 3650 },
     status: { type: "enum", values: ["Preferred", "Active", "Suspended"] },
   },
   orderBy: "t.name",

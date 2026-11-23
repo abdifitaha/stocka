@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, Globe, ChevronDown, X, Mail, Clock } from "lucide-react";
+import { Search, Plus, Globe, ChevronDown, X, Mail } from "lucide-react";
 import Badge from "../components/ui/Badge";
 import { useToast } from "../components/ui/Toast";
 import { useApi, post } from "../lib/api";
@@ -7,10 +7,9 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 
 interface Supplier {
   id: number; code: string; name: string; contact: string; email: string; phone: string; country: string;
-  lead_days: number; status: "Preferred" | "Active" | "Suspended"; products: number;
+  status: "Preferred" | "Active" | "Suspended"; products: number;
 }
 
-const leadLabel = (days: number) => `${days} day${days === 1 ? "" : "s"}`;
 
 const statusVariant: Record<string, "blue" | "success" | "danger"> = {
   Preferred: "blue", Active: "success", Suspended: "danger",
@@ -33,7 +32,6 @@ function SupplierDetailModal({ supplier, onClose }: { supplier: Supplier; onClos
             ["Email", supplier.email],
             ["Country", supplier.country],
             ["Products Supplied", supplier.products],
-            ["Lead Time", leadLabel(supplier.lead_days)],
             ["Status", supplier.status],
           ].map(([label, value]) => (
             <div key={String(label)} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
@@ -52,12 +50,12 @@ function SupplierDetailModal({ supplier, onClose }: { supplier: Supplier; onClos
 }
 
 interface SupplierFormData {
-  name: string; contact: string; email: string; country: string; lead: string; status: "Preferred" | "Active" | "Suspended";
+  name: string; contact: string; email: string; country: string; status: "Preferred" | "Active" | "Suspended";
 }
 
-function CreateSupplierModal({ onClose, onSave }: { onClose: () => void; onSave: (s: Omit<SupplierFormData, "lead"> & { lead_days: number }) => Promise<void> }) {
+function CreateSupplierModal({ onClose, onSave }: { onClose: () => void; onSave: (s: SupplierFormData) => Promise<void> }) {
   const [form, setForm] = useState<SupplierFormData>({
-    name: "", contact: "", email: "", country: "", lead: "7", status: "Active",
+    name: "", contact: "", email: "", country: "", status: "Active",
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<SupplierFormData>>({});
@@ -69,7 +67,6 @@ function CreateSupplierModal({ onClose, onSave }: { onClose: () => void; onSave:
     if (!form.email.trim()) e.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Invalid email";
     if (!form.country.trim()) e.country = "Country is required";
-    if (form.lead.trim() && !/^\d+$/.test(form.lead.trim())) e.lead = "Enter a number of days";
     return e;
   };
 
@@ -80,7 +77,7 @@ function CreateSupplierModal({ onClose, onSave }: { onClose: () => void; onSave:
     try {
       await onSave({
         name: form.name, contact: form.contact, email: form.email,
-        country: form.country, lead_days: form.lead.trim() ? Number(form.lead) : 7, status: form.status,
+        country: form.country, status: form.status,
       });
     } finally { setSaving(false); }
   };
@@ -113,19 +110,7 @@ function CreateSupplierModal({ onClose, onSave }: { onClose: () => void; onSave:
             {field({ label: "Contact Person *", k: "contact", placeholder: "Alan Park" })}
             {field({ label: "Email *", k: "email", type: "email", placeholder: "contact@supplier.com", icon: Mail })}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {field({ label: "Country *", k: "country", placeholder: "USA", icon: Globe })}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Lead Time (days)</label>
-              <div className="relative">
-                <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                <input inputMode="numeric" value={form.lead} onChange={e => setForm(f => ({ ...f, lead: e.target.value }))}
-                  placeholder="7"
-                  className={`w-full pl-9 pr-4 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 ${errors.lead ? "border-red-400 bg-red-50" : "border-slate-200"}`} />
-              </div>
-              {errors.lead && <p className="text-xs text-red-500 mt-1">{errors.lead}</p>}
-            </div>
-          </div>
+          {field({ label: "Country *", k: "country", placeholder: "USA", icon: Globe })}
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1.5">Status</label>
@@ -170,7 +155,7 @@ export default function Suppliers() {
     (s.name.toLowerCase().includes(search.toLowerCase()) || s.contact.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const handleCreate = async (s: Omit<SupplierFormData, "lead"> & { lead_days: number }) => {
+  const handleCreate = async (s: SupplierFormData) => {
     try {
       await post("/api/suppliers", s);
       setCreating(false);
@@ -213,8 +198,7 @@ export default function Suppliers() {
               <th className="text-left px-4 py-3 font-semibold">Contact</th>
               <th className="text-left px-4 py-3 font-semibold">Country</th>
               <th className="text-right px-4 py-3 font-semibold">Products</th>
-              <th className="text-left px-4 py-3 font-semibold">Lead Time</th>
-              <th className="text-left px-4 py-3 font-semibold">Status</th>
+                            <th className="text-left px-4 py-3 font-semibold">Status</th>
               <th className="text-center px-4 py-3 font-semibold">Actions</th>
             </tr>
           </thead>
@@ -235,7 +219,6 @@ export default function Suppliers() {
                   </div>
                 </td>
                 <td className="px-4 py-4 text-right text-xs font-semibold text-slate-900">{s.products}</td>
-                <td className="px-4 py-4 text-xs text-slate-600">{leadLabel(s.lead_days)}</td>
                 <td className="px-4 py-4">
                   <Badge variant={statusVariant[s.status]}>{s.status}</Badge>
                 </td>

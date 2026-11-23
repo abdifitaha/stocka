@@ -53,7 +53,6 @@ CREATE TABLE IF NOT EXISTS suppliers (
   email TEXT NOT NULL DEFAULT '',
   phone TEXT NOT NULL DEFAULT '',
   country TEXT NOT NULL DEFAULT '',
-  lead_days INTEGER NOT NULL DEFAULT 7 CHECK (lead_days >= 0),
   status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Preferred', 'Active', 'Suspended')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -128,3 +127,4 @@ CREATE INDEX IF NOT EXISTS movements_product_idx ON stock_movements (product_id,
 CREATE INDEX IF NOT EXISTS po_items_po_idx ON purchase_order_items (po_id);
 
 ALTER TABLE products DROP COLUMN IF EXISTS sku;
+ALTER TABLE suppliers DROP COLUMN IF EXISTS lead_days;
